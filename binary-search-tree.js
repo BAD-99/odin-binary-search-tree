@@ -44,44 +44,59 @@ class Tree {
   }
 
   deleteItem(value, startNode) {
-    let node = startNode || this.root;
     let targetNode = null;
-    if (node.value === value) {
-      targetNode = node;
+    let parentNode = startNode || this.root;
+    let nextNode = parentNode;
+    if (value === parentNode.value) {
     }
     while (targetNode === null) {
-      let nextNode = value < node.value ? node.left : node.right;
-      if (nextNode === null) {
-        break;
-      }
-      if (nextNode.value === value) {
+      if (value === nextNode.value) {
         targetNode = nextNode;
       } else {
-        node = nextNode;
+        parentNode = nextNode;
+        let nextNode = value < nextNode.value ? nextNode.left : nextNode.right;
+        if (nextNode === null) {
+          return false;
+        }
       }
     }
-    if (targetNode === null) {
-      return false;
-    }
-    let childNode = null;
-    if (targetNode.left && targetNode.right) {
-      childNode = targetNode.right;
-      let parentNode = null;
-      while (childNode.left !== null) {
-        parentNode = childNode;
-        childNode = childNode.left;
+
+    const replaceValue = (replacement) => {
+      if (value === parentNode.value) {
+        if (replacement) {
+          replacement.left = parentNode.left;
+          replacement.right = parentNode.right;
+        }
+      } else if (parentNode.left === targetNode) {
+        parentNode.left = replacement;
+      } else {
+        parentNode.right = replacement;
       }
-      if(parentNode === null){
+    };
+
+    if (targetNode.right && targetNode.left) {
+      let nextLargest = targetNode.right;
+      let nextLargestParent = targetNode;
+      while (nextLargest.left) {
+        nextLargestParent = nextLargest;
+        nextLargest = nextLargest.left;
       }
-    } else if (targetNode.left || targetNode.right) {
-      childNode = targetNode.left ? targetNode.left : targetNode.right;
-    }
-    if (targetNode === node.left) {
-      node.left = childNode;
+      this.deleteItem(nextLargest.value, nextLargestParent);
+      replaceValue(nextLargest);
+    } else if (targetNode.right || targetNode.left) {
+      let targetChild = targetNode.right ? targetNode.right : targetNode.left;
+      replaceValue(targetChild);
     } else {
-      node.right = childNode;
+      replaceValue(null);
     }
     return true;
+    /*
+  /find the target node and the parent node
+  if there are no children then remove it from parent
+  if there is one child then make it the child of the parent
+  if there are both children find the next biggest child, delete it and 
+  replace the target with it
+  */
   }
 }
 
