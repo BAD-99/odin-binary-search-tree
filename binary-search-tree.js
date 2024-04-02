@@ -29,6 +29,9 @@ class Tree {
     let node = this.root;
     let targetNode = null;
     while (targetNode === null) {
+      if (value === node.value) {
+        return false;
+      }
       let nextNode = value < node.value ? node.left : node.right;
       if (nextNode) {
         node = nextNode;
@@ -41,20 +44,19 @@ class Tree {
     } else {
       targetNode.right = new Node(value);
     }
+    return true;
   }
 
   deleteItem(value, startNode) {
     let targetNode = null;
     let parentNode = startNode || this.root;
     let nextNode = parentNode;
-    if (value === parentNode.value) {
-    }
     while (targetNode === null) {
       if (value === nextNode.value) {
         targetNode = nextNode;
       } else {
         parentNode = nextNode;
-        let nextNode = value < nextNode.value ? nextNode.left : nextNode.right;
+        nextNode = value < nextNode.value ? nextNode.left : nextNode.right;
         if (nextNode === null) {
           return false;
         }
@@ -66,6 +68,10 @@ class Tree {
         if (replacement) {
           replacement.left = parentNode.left;
           replacement.right = parentNode.right;
+        }
+        parentNode = replacement;
+        if (value === this.root.value) {
+          this.root = parentNode;
         }
       } else if (parentNode.left === targetNode) {
         parentNode.left = replacement;
@@ -90,13 +96,119 @@ class Tree {
       replaceValue(null);
     }
     return true;
-    /*
-  /find the target node and the parent node
-  if there are no children then remove it from parent
-  if there is one child then make it the child of the parent
-  if there are both children find the next biggest child, delete it and 
-  replace the target with it
-  */
+  }
+
+  find(value) {
+    let searchNode = this.root;
+    while (value !== searchNode.value) {
+      if (searchNode === null) {
+        return null;
+      }
+      searchNode =
+        value < searchNode.value ? searchNode.left : searchNode.right;
+    }
+    return searchNode;
+  }
+  levelOrder(callback) {
+    let currentLevel = [this.root];
+    while (currentLevel.length !== 0) {
+      let temp = [];
+      currentLevel.forEach((node) => {
+        if (node) {
+          temp.push(node.right, node.left);
+          callback(node);
+        }
+      });
+      currentLevel = temp;
+    }
+  }
+  inOrder(callback, node = this.root) {
+    if (node) {
+      this.inOrder(callback, node.left);
+      callback(node);
+      this.inOrder(callback, node.right);
+    }
+  }
+  preOrder(callback, node = this.root) {
+    if (node) {
+      callback(node);
+      this.inOrder(callback, node.left);
+      this.inOrder(callback, node.right);
+    }
+  }
+  postOrder(callback, node = this.root) {
+    if (node) {
+      this.inOrder(callback, node.left);
+      this.inOrder(callback, node.right);
+      callback(node);
+    }
+  }
+  height(node) {
+    let height = 0;
+    let currentLevel = [node];
+    while (currentLevel.length !== 0) {
+      height++;
+      let temp = [];
+      currentLevel.forEach((n) => {
+        if (n.left != null) {
+          temp.push(n.left);
+        }
+        if (n.right != null) {
+          temp.push(n.right);
+        }
+      });
+      currentLevel = temp;
+    }
+    return height;
+  }
+  depth(node) {
+    let currentNode = this.root;
+    let depth = 0;
+    while (currentNode != null) {
+      depth++;
+      if (node === currentNode) {
+        return depth;
+      }
+      if (node.value < currentNode.value) {
+        currentNode = currentNode.left;
+      } else {
+        currentNode = currentNode.right;
+      }
+    }
+    return null;
+  }
+
+  isBalanced() {
+    let min = null;
+    let max = 0;
+    let arr = [this.root];
+    while (arr.length !== 0) {
+      max++;
+      if (min !== null && max - min > 1) {
+        return false;
+      }
+      let temp = [];
+      arr.forEach((n) => {
+        if (n.left) {
+          temp.push(n.left);
+        }
+        if (n.right) {
+          temp.push(n.right);
+        }
+        if (!min && !n.left && !n.right) {
+          min = max;
+        }
+      });
+      arr = temp;
+    }
+    return true;
+  }
+  rebalance() {
+    let arr = [];
+    this.inOrder((node) => {
+      arr.push(node.value);
+    });
+    this.root = this.buildTree(arr, true);
   }
 }
 
@@ -114,8 +226,47 @@ const prettyPrint = (node, prefix = "", isLeft = true) => {
 };
 
 let arr = [];
-for (let i = 0; i < 24; i++) {
+for (let i = 0; i < 100; i++) {
   arr.push(parseInt(100 * Math.random()));
 }
 let tree = new Tree(arr);
-prettyPrint(tree.root);
+console.log(tree.isBalanced);
+let printArr = [];
+const cb = (node) => {
+  printArr.push(node.value);
+};
+const printAndClear = () => {
+  console.table(printArr);
+  printArr = [];
+};
+tree.levelOrder(cb);
+printAndClear();
+tree.preOrder(cb);
+printAndClear();
+tree.inOrder(cb);
+printAndClear();
+tree.postOrder(cb);
+printAndClear();
+
+for (let i = 0; i < 25; i++) {
+  tree.insert(parseInt(100 * Math.random() + 100));
+}
+
+console.log(tree.isBalanced());
+tree.rebalance();
+console.log(tree.isBalanced());
+
+tree.levelOrder(cb);
+printAndClear();
+tree.preOrder(cb);
+printAndClear();
+tree.inOrder(cb);
+printAndClear();
+tree.postOrder(cb);
+printAndClear();
+
+// tree.deleteItem(tree.root.value);
+// console.log(tree.find(13));
+// console.log(tree.insert(420));
+// console.log(tree.insert(420));
+// prettyPrint(tree.root);
